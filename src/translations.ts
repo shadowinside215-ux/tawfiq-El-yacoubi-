@@ -45,6 +45,9 @@ export const translations = {
       point3: "Plus de 10 ans d'expérience en coaching",
       point4: "Méthodologie axée sur les résultats",
     },
+    story: {
+      title: "Mon Histoire",
+    },
     gallery: {
       title: "Galerie",
     },
@@ -124,6 +127,9 @@ export const translations = {
       point3: "10+ years of coaching experience",
       point4: "Results-driven methodology",
     },
+    story: {
+      title: "My Story",
+    },
     gallery: {
       title: "Gallery",
     },
@@ -202,6 +208,9 @@ export const translations = {
       point2: "برامج مخصصة لجميع المستويات",
       point3: "أكثر من 10 سنوات من الخبرة في التدريب",
       point4: "منهجية تعتمد على النتائج",
+    },
+    story: {
+      title: "قصتي",
     },
     gallery: {
       title: "المعرض",

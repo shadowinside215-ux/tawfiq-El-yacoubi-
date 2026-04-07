@@ -18,7 +18,9 @@ import {
   Star,
   Instagram,
   Facebook,
-  Twitter
+  Twitter,
+  Play,
+  Upload
 } from 'lucide-react';
 import { translations } from './translations';
 
@@ -61,6 +63,25 @@ export default function App() {
     return ['action-1.jpg', 'action-2.jpg'];
   });
 
+  // Discipline Images State
+  const [disciplineImages, setDisciplineImages] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('tawfiq_disciplines');
+    if (saved) return JSON.parse(saved);
+    return {
+      muaythai: '',
+      k1: '',
+      kickboxing: '',
+      mma: '',
+      fullcontact: '',
+      fitness: '',
+    };
+  });
+
+  // Story Video State
+  const [storyVideo, setStoryVideo] = useState<string>(() => {
+    return localStorage.getItem('tawfiq_story_video') || '';
+  });
+
   // Cloudinary Config State (if not in env)
   const [cloudConfig, setCloudConfig] = useState({
     name: CLOUDINARY_CLOUD_NAME,
@@ -70,7 +91,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('tawfiq_gallery', JSON.stringify(galleryImages));
     localStorage.setItem('tawfiq_why', JSON.stringify(whyImages));
-  }, [galleryImages, whyImages]);
+    localStorage.setItem('tawfiq_disciplines', JSON.stringify(disciplineImages));
+    localStorage.setItem('tawfiq_story_video', storyVideo);
+  }, [galleryImages, whyImages, disciplineImages, storyVideo]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -89,7 +112,7 @@ export default function App() {
     }
   };
 
-  const openUploadWidget = (index?: number, type: 'gallery' | 'why' = 'gallery') => {
+  const openUploadWidget = (index?: number | string, type: 'gallery' | 'why' | 'discipline' | 'video' = 'gallery') => {
     if (!cloudConfig.name || !cloudConfig.preset) {
       alert("Please configure Cloudinary Cloud Name and Upload Preset in the Admin Panel first.");
       return;
@@ -101,6 +124,7 @@ export default function App() {
         cloudName: cloudConfig.name,
         uploadPreset: cloudConfig.preset,
         sources: ['local', 'url', 'camera'],
+        resourceType: type === 'video' ? 'video' : 'image',
         multiple: index === undefined,
         cropping: false,
         styles: {
@@ -124,13 +148,17 @@ export default function App() {
       (error: any, result: any) => {
         if (!error && result && result.event === "success") {
           const newUrl = result.info.secure_url;
-          if (type === 'why' && index !== undefined) {
+          if (type === 'video') {
+            setStoryVideo(newUrl);
+          } else if (type === 'discipline' && typeof index === 'string') {
+            setDisciplineImages(prev => ({ ...prev, [index]: newUrl }));
+          } else if (type === 'why' && typeof index === 'number') {
             setWhyImages(prev => {
               const next = [...prev];
               next[index] = newUrl;
               return next;
             });
-          } else if (index !== undefined) {
+          } else if (index !== undefined && typeof index === 'number') {
             setGalleryImages(prev => {
               const next = [...prev];
               next[index] = newUrl;
@@ -153,6 +181,7 @@ export default function App() {
 
   const navLinks = [
     { href: '#about', label: t.nav.about },
+    { href: '#story', label: t.story.title },
     { href: '#disciplines', label: t.nav.disciplines },
     { href: '#achievements', label: t.nav.achievements },
     { href: '#gallery', label: t.nav.gallery },
@@ -308,8 +337,45 @@ export default function App() {
         </div>
       </section>
 
+      {/* My Story Section */}
+      <section id="story" className="py-24 bg-brand-navy/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display font-black mb-4">{t.story.title}</h2>
+            <div className="w-24 h-1 bg-brand-accent mx-auto rounded-full"></div>
+          </div>
+          
+          <div className="max-w-4xl mx-auto">
+            <div 
+              className={`relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black/40 group ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
+              onClick={() => isAdminLoggedIn && openUploadWidget(0, 'video')}
+            >
+              {storyVideo ? (
+                <video 
+                  src={storyVideo} 
+                  controls 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-white/20">
+                  <Play size={64} className="mb-4" />
+                  <p className="uppercase tracking-widest font-bold">Video Placeholder</p>
+                </div>
+              )}
+              
+              {isAdminLoggedIn && (
+                <div className="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center z-20">
+                  <Upload size={48} className="text-white mb-2" />
+                  <p className="text-white font-bold uppercase tracking-widest">Upload Story Video</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Disciplines Section */}
-      <section id="disciplines" className="py-24 bg-brand-navy/30">
+      <section id="disciplines" className="py-24 bg-brand-dark">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-display font-black mb-4">{t.disciplines.title}</h2>
@@ -333,8 +399,25 @@ export default function App() {
                 transition={{ delay: idx * 0.1 }}
                 className="glass glass-hover p-8 rounded-2xl group"
               >
-                <div className="w-16 h-16 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent mb-6 group-hover:scale-110 transition-transform">
-                  {item.icon}
+                <div 
+                  className={`w-16 h-16 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent mb-6 group-hover:scale-110 transition-transform overflow-hidden relative ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
+                  onClick={() => isAdminLoggedIn && openUploadWidget(item.key, 'discipline')}
+                >
+                  {disciplineImages[item.key] ? (
+                    <img 
+                      src={getImageUrl(disciplineImages[item.key], 'w_200,c_fill,q_auto')} 
+                      alt={item.key} 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    item.icon
+                  )}
+                  {isAdminLoggedIn && (
+                    <div className="absolute inset-0 bg-brand-accent/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Upload size={20} className="text-white" />
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-2xl font-display font-bold mb-3">{(t.disciplines as any)[item.key]}</h3>
                 <p className="text-white/50 text-sm">
