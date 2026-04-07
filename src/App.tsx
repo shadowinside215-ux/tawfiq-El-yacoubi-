@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, 
@@ -22,9 +22,13 @@ import {
 } from 'lucide-react';
 import { translations } from './translations';
 
-const CLOUDINARY_NAME = "YOUR_CLOUD_NAME";
-const getImageUrl = (filename: string, transforms = "") => 
-  `https://res.cloudinary.com/${CLOUDINARY_NAME}/image/upload/${transforms}/${filename}`;
+const CLOUDINARY_CLOUD_NAME = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || "";
+const CLOUDINARY_UPLOAD_PRESET = (import.meta as any).env.VITE_CLOUDINARY_UPLOAD_PRESET || "";
+
+const getImageUrl = (filename: string, transforms = "") => {
+  if (filename.startsWith('http')) return filename;
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME'}/image/upload/${transforms}/${filename}`;
+};
 
 type Language = 'fr' | 'en' | 'ar';
 
@@ -33,15 +37,99 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
+  
   const t = translations[lang];
   const isRtl = lang === 'ar';
+  
+  // Admin State
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
+  
+  // Gallery State
+  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tawfiq_gallery');
+    if (saved) return JSON.parse(saved);
+    return ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg', 'gallery-5.jpg', 'gallery-6.jpg'];
+  });
+
+  // Cloudinary Config State (if not in env)
+  const [cloudConfig, setCloudConfig] = useState({
+    name: CLOUDINARY_CLOUD_NAME,
+    preset: CLOUDINARY_UPLOAD_PRESET
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tawfiq_gallery', JSON.stringify(galleryImages));
+  }, [galleryImages]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginForm.username === 'sam' && loginForm.password === 'sam2006') {
+      setIsAdminLoggedIn(true);
+      setShowLoginModal(false);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid credentials');
+    }
+  };
+
+  const openUploadWidget = (index?: number) => {
+    if (!cloudConfig.name || !cloudConfig.preset) {
+      alert("Please configure Cloudinary Cloud Name and Upload Preset in the Admin Panel first.");
+      return;
+    }
+
+    // @ts-ignore
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: cloudConfig.name,
+        uploadPreset: cloudConfig.preset,
+        sources: ['local', 'url', 'camera'],
+        multiple: index === undefined,
+        cropping: false,
+        styles: {
+          palette: {
+            window: "#0a0a0f",
+            sourceBg: "#0d1b2a",
+            windowBorder: "#1a3a5c",
+            tabIcon: "#00aaff",
+            inactiveTabIcon: "#ffffff",
+            menuIcons: "#00aaff",
+            link: "#00aaff",
+            action: "#00aaff",
+            inProgress: "#00aaff",
+            complete: "#25D366",
+            error: "#ff0000",
+            textDark: "#000000",
+            textLight: "#ffffff"
+          }
+        }
+      },
+      (error: any, result: any) => {
+        if (!error && result && result.event === "success") {
+          const newUrl = result.info.secure_url;
+          if (index !== undefined) {
+            setGalleryImages(prev => {
+              const next = [...prev];
+              next[index] = newUrl;
+              return next;
+            });
+          } else {
+            setGalleryImages(prev => [newUrl, ...prev]);
+          }
+        }
+      }
+    );
+    widget.open();
+  };
 
   const toggleLang = (newLang: Language) => {
     setLang(newLang);
@@ -63,10 +151,7 @@ export default function App() {
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-brand-dark/90 backdrop-blur-md py-4 shadow-xl' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <a href="#" className="text-2xl font-display font-extrabold tracking-tighter flex items-center gap-2">
-            <span className="text-brand-accent">TAWFIQ</span>
-            <span className="hidden sm:inline">EL YACOUBI</span>
-          </a>
+          <div className="w-10"></div> {/* Spacer where logo was */}
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8">
@@ -132,12 +217,6 @@ export default function App() {
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src={getImageUrl('coach-hero.jpg', 'w_1920,c_fill,q_auto,e_improve')} 
-            alt="Coach Hero" 
-            className="w-full h-full object-cover opacity-40"
-            referrerPolicy="no-referrer"
-          />
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/20 via-brand-dark/60 to-brand-dark"></div>
         </div>
 
@@ -147,9 +226,6 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-brand-accent font-display font-bold tracking-widest uppercase mb-4">
-              {t.hero.title}
-            </h2>
             <h1 className="text-5xl md:text-8xl font-display font-black mb-8 leading-tight">
               TAWFIQ <span className="text-gradient">EL YACOUBI</span>
             </h1>
@@ -182,60 +258,39 @@ export default function App() {
 
       {/* About Section */}
       <section id="about" className="py-24 bg-brand-dark">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: isRtl ? 50 : -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 bg-brand-accent/20 blur-3xl rounded-full"></div>
-              <img 
-                src={getImageUrl('coach-portrait.jpg', 'w_800,c_fill,g_face,q_auto')} 
-                alt="Tawfiq Portrait" 
-                className="relative z-10 w-full rounded-2xl shadow-2xl border border-white/10"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute -bottom-6 -right-6 z-20 glass p-6 rounded-xl hidden md:block">
-                <p className="text-brand-accent font-display font-bold text-4xl">10+</p>
-                <p className="text-xs uppercase tracking-widest text-white/60">{t.achievements.coaching_since}</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: isRtl ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl md:text-5xl font-display font-black mb-6">
-                {t.about.title}
-              </h2>
-              <p className="text-lg text-white/70 leading-relaxed mb-8">
-                {t.about.bio}
-              </p>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                    <Trophy size={24} />
-                  </div>
-                  <div>
-                    <p className="font-bold">World Class</p>
-                    <p className="text-xs text-white/50">Competitor</p>
-                  </div>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-display font-black mb-6">
+              {t.about.title}
+            </h2>
+            <p className="text-lg text-white/70 leading-relaxed mb-8">
+              {t.about.bio}
+            </p>
+            <div className="grid grid-cols-2 gap-6 max-w-md mx-auto">
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                  <Trophy size={24} />
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                    <Award size={24} />
-                  </div>
-                  <div>
-                    <p className="font-bold">Certified</p>
-                    <p className="text-xs text-white/50">National Coach</p>
-                  </div>
+                <div className="text-left">
+                  <p className="font-bold">World Class</p>
+                  <p className="text-xs text-white/50">Competitor</p>
                 </div>
               </div>
-            </motion.div>
-          </div>
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                  <Award size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold">Certified</p>
+                  <p className="text-xs text-white/50">National Coach</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -389,24 +444,62 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {galleryImages.map((img, i) => (
               <motion.div
                 key={i}
                 whileHover={{ scale: 1.02 }}
                 className="relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-white/10 group"
-                onClick={() => setSelectedImage(getImageUrl(`gallery-${i}.jpg`, 'w_1200,q_auto'))}
+                onClick={() => {
+                  if (isAdminLoggedIn) {
+                    openUploadWidget(i);
+                  } else {
+                    setSelectedImage(getImageUrl(img, 'w_1200,q_auto'));
+                  }
+                }}
               >
-                <img 
-                  src={getImageUrl(`gallery-${i}.jpg`, 'w_600,c_fill,q_auto')} 
-                  alt={`Gallery ${i}`} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
+                {img.includes('gallery-') ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-white/20">
+                    <Zap size={32} className="mb-2" />
+                    <span className="text-[10px] uppercase tracking-widest">Empty Slot</span>
+                  </div>
+                ) : (
+                  <img 
+                    src={getImageUrl(img, 'w_600,c_fill,q_auto')} 
+                    alt={`Gallery ${i}`} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
                 <div className="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Zap size={32} className="text-white" />
                 </div>
+                {isAdminLoggedIn && !img.includes('gallery-') && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGalleryImages(prev => {
+                        const next = [...prev];
+                        next[i] = `gallery-${i + 1}.jpg`; // Reset to placeholder
+                        return next;
+                      });
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </motion.div>
             ))}
+            {isAdminLoggedIn && (
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative aspect-square cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-white/10 hover:border-brand-accent/50 flex flex-col items-center justify-center group bg-white/5"
+                onClick={() => openUploadWidget()}
+              >
+                <Zap size={32} className="text-brand-accent mb-2 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-white/40 group-hover:text-white uppercase tracking-widest">Add New Slot</span>
+              </motion.div>
+            )}
           </div>
         </div>
       </section>
@@ -561,12 +654,28 @@ export default function App() {
               <p className="text-white/40 text-sm max-w-xs">
                 Elite martial arts training and personal coaching for results-driven individuals.
               </p>
+              <button 
+                onClick={() => isAdminLoggedIn ? setIsAdminLoggedIn(false) : setShowLoginModal(true)}
+                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
+              >
+                {isAdminLoggedIn ? 'Logout Admin' : 'Admin Access'}
+              </button>
             </div>
             <div className="flex gap-6">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors">
+              <a 
+                href="https://www.instagram.com/tawfikelyacoubi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors"
+              >
                 <Instagram size={20} />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors">
+              <a 
+                href="https://www.facebook.com/share/1bHQ8DpGME/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors"
+              >
                 <Facebook size={20} />
               </a>
               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors">
@@ -584,6 +693,106 @@ export default function App() {
           </div>
         </div>
       </footer>
+      {/* Admin Panel Overlay */}
+      <AnimatePresence>
+        {isAdminLoggedIn && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] glass p-4 rounded-2xl flex flex-wrap items-center gap-4 shadow-2xl border-brand-accent/30"
+          >
+            <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/20 rounded-lg text-brand-accent text-xs font-bold uppercase tracking-widest">
+              <Shield size={14} /> Admin Mode
+            </div>
+            
+            <div className="h-6 w-px bg-white/10 mx-2"></div>
+            
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder="Cloud Name" 
+                value={cloudConfig.name}
+                onChange={(e) => setCloudConfig(prev => ({ ...prev, name: e.target.value }))}
+                className="bg-white/5 border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-accent"
+              />
+              <input 
+                type="text" 
+                placeholder="Upload Preset" 
+                value={cloudConfig.preset}
+                onChange={(e) => setCloudConfig(prev => ({ ...prev, preset: e.target.value }))}
+                className="bg-white/5 border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-accent"
+              />
+            </div>
+
+            <button 
+              onClick={openUploadWidget}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-brand-accent/80 transition-all"
+            >
+              <Zap size={16} /> Add Pictures
+            </button>
+            
+            <button 
+              onClick={() => setIsAdminLoggedIn(false)}
+              className="p-2 text-white/40 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Login Modal */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-brand-dark/95 flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="glass p-8 rounded-3xl w-full max-w-md relative"
+            >
+              <button 
+                onClick={() => setShowLoginModal(false)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white"
+              >
+                <X size={24} />
+              </button>
+              
+              <h2 className="text-3xl font-display font-black mb-6 text-center">Admin Login</h2>
+              
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60">Username</label>
+                  <input 
+                    type="text" 
+                    value={loginForm.username}
+                    onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/60">Password</label>
+                  <input 
+                    type="password" 
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors" 
+                  />
+                </div>
+                {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
+                <button className="w-full py-4 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-accent/80 transition-all">
+                  Login
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
