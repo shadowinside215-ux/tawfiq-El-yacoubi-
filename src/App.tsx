@@ -18,7 +18,6 @@ import {
   Star,
   Instagram,
   Facebook,
-  Twitter,
   Play,
   Upload
 } from 'lucide-react';
@@ -751,9 +750,6 @@ export default function App() {
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors"
               >
                 <Facebook size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-accent transition-colors">
-                <Twitter size={20} />
               </a>
             </div>
           </div>
