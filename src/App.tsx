@@ -54,6 +54,13 @@ export default function App() {
     return ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg', 'gallery-5.jpg', 'gallery-6.jpg'];
   });
 
+  // Why Images State
+  const [whyImages, setWhyImages] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tawfiq_why');
+    if (saved) return JSON.parse(saved);
+    return ['action-1.jpg', 'action-2.jpg'];
+  });
+
   // Cloudinary Config State (if not in env)
   const [cloudConfig, setCloudConfig] = useState({
     name: CLOUDINARY_CLOUD_NAME,
@@ -62,7 +69,8 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('tawfiq_gallery', JSON.stringify(galleryImages));
-  }, [galleryImages]);
+    localStorage.setItem('tawfiq_why', JSON.stringify(whyImages));
+  }, [galleryImages, whyImages]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -81,7 +89,7 @@ export default function App() {
     }
   };
 
-  const openUploadWidget = (index?: number) => {
+  const openUploadWidget = (index?: number, type: 'gallery' | 'why' = 'gallery') => {
     if (!cloudConfig.name || !cloudConfig.preset) {
       alert("Please configure Cloudinary Cloud Name and Upload Preset in the Admin Panel first.");
       return;
@@ -116,7 +124,13 @@ export default function App() {
       (error: any, result: any) => {
         if (!error && result && result.event === "success") {
           const newUrl = result.info.secure_url;
-          if (index !== undefined) {
+          if (type === 'why' && index !== undefined) {
+            setWhyImages(prev => {
+              const next = [...prev];
+              next[index] = newUrl;
+              return next;
+            });
+          } else if (index !== undefined) {
             setGalleryImages(prev => {
               const next = [...prev];
               next[index] = newUrl;
@@ -418,18 +432,38 @@ export default function App() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <img 
-                src={getImageUrl('action-1.jpg', 'w_600,c_fill,q_auto')} 
-                alt="Action 1" 
-                className="rounded-2xl w-full h-64 object-cover border border-white/10"
-                referrerPolicy="no-referrer"
-              />
-              <img 
-                src={getImageUrl('action-2.jpg', 'w_600,c_fill,q_auto')} 
-                alt="Action 2" 
-                className="rounded-2xl w-full h-64 object-cover mt-8 border border-white/10"
-                referrerPolicy="no-referrer"
-              />
+              <div 
+                className={`relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+                onClick={() => isAdminLoggedIn && openUploadWidget(0, 'why')}
+              >
+                <img 
+                  src={getImageUrl(whyImages[0], 'w_600,c_fill,q_auto')} 
+                  alt="Action 1" 
+                  className="w-full h-64 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                {isAdminLoggedIn && (
+                  <div className="absolute inset-0 bg-brand-accent/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Zap size={32} className="text-white" />
+                  </div>
+                )}
+              </div>
+              <div 
+                className={`relative cursor-pointer overflow-hidden rounded-2xl mt-8 border border-white/10 ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+                onClick={() => isAdminLoggedIn && openUploadWidget(1, 'why')}
+              >
+                <img 
+                  src={getImageUrl(whyImages[1], 'w_600,c_fill,q_auto')} 
+                  alt="Action 2" 
+                  className="w-full h-64 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                {isAdminLoggedIn && (
+                  <div className="absolute inset-0 bg-brand-accent/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Zap size={32} className="text-white" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -562,83 +596,40 @@ export default function App() {
 
       {/* Contact Section */}
       <section id="contact" className="py-24 bg-brand-dark">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-display font-black mb-8">{t.contact.title}</h2>
-              <div className="space-y-8 mb-12">
-                <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                    <Phone size={24} />
-                  </div>
-                  <div>
-                    <p className="text-white/50 text-sm uppercase tracking-widest">{t.contact.phone}</p>
-                    <p className="text-2xl font-bold">06 65 73 85 93</p>
-                  </div>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-display font-black mb-12">{t.contact.title}</h2>
+          
+          <div className="glass p-12 rounded-3xl max-w-2xl mx-auto">
+            <div className="space-y-12 mb-12">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                  <Phone size={32} />
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                    <Mail size={24} />
-                  </div>
-                  <div>
-                    <p className="text-white/50 text-sm uppercase tracking-widest">{t.contact.email}</p>
-                    <p className="text-2xl font-bold">elyacoubitawfik@gmail.com</p>
-                  </div>
+                <div>
+                  <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{t.contact.phone}</p>
+                  <p className="text-3xl font-bold">06 65 73 85 93</p>
                 </div>
               </div>
-
-              <a 
-                href="https://wa.me/212665738593" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white font-bold rounded-full hover:scale-105 transition-all shadow-lg"
-              >
-                <MessageCircle size={24} />
-                {t.contact.whatsapp}
-              </a>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                  <Mail size={32} />
+                </div>
+                <div>
+                  <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{t.contact.email}</p>
+                  <p className="text-3xl font-bold">elyacoubitawfik@gmail.com</p>
+                </div>
+              </div>
             </div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="glass p-8 rounded-3xl"
+            <a 
+              href="https://wa.me/212665738593" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-4 px-12 py-6 bg-[#25D366] text-white text-xl font-bold rounded-full hover:scale-105 transition-all shadow-2xl shadow-[#25D366]/20"
             >
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/60">{t.contact.name}</label>
-                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/60">{t.contact.phone}</label>
-                    <input type="tel" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/60">{t.contact.email}</label>
-                  <input type="email" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/60">{t.contact.discipline}</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors appearance-none">
-                    <option value="" className="bg-brand-dark">{t.contact.select_discipline}</option>
-                    <option value="muaythai" className="bg-brand-dark">{t.disciplines.muaythai}</option>
-                    <option value="k1" className="bg-brand-dark">{t.disciplines.k1}</option>
-                    <option value="kickboxing" className="bg-brand-dark">{t.disciplines.kickboxing}</option>
-                    <option value="mma" className="bg-brand-dark">{t.disciplines.mma}</option>
-                    <option value="fitness" className="bg-brand-dark">{t.disciplines.fitness}</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/60">{t.contact.message}</label>
-                  <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-brand-accent transition-colors"></textarea>
-                </div>
-                <button className="w-full py-4 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-accent/80 transition-all shadow-lg shadow-brand-accent/20">
-                  {t.contact.send}
-                </button>
-              </form>
-            </motion.div>
+              <MessageCircle size={32} />
+              {t.contact.whatsapp}
+            </a>
           </div>
         </div>
       </section>
