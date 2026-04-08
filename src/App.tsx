@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, 
@@ -19,9 +20,79 @@ import {
   Instagram,
   Facebook,
   Play,
-  Upload
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 import { translations } from './translations';
+import { auth, db, handleFirestoreError, OperationType } from './firebase';
+import { 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  getDocFromServer,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { 
+  onAuthStateChanged, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut,
+  User
+} from 'firebase/auth';
+
+// Error Boundary Component
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      let message = "Something went wrong.";
+      try {
+        const errInfo = JSON.parse(this.state.error?.message || "{}");
+        if (errInfo.error) {
+          message = `Firestore Error: ${errInfo.error} (${errInfo.operationType} on ${errInfo.path})`;
+        }
+      } catch (e) {
+        message = this.state.error?.message || message;
+      }
+
+      return (
+        <div className="min-h-screen bg-brand-dark flex items-center justify-center p-6 text-center">
+          <div className="glass p-8 rounded-3xl max-w-md">
+            <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">Oops!</h2>
+            <p className="text-white/60 mb-6">{message}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-brand-accent text-white rounded-full font-bold"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (this as any).props.children;
+  }
+}
 
 const CLOUDINARY_CLOUD_NAME = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME || "";
 const CLOUDINARY_UPLOAD_PRESET = (import.meta as any).env.VITE_CLOUDINARY_UPLOAD_PRESET || "";
@@ -34,6 +105,14 @@ const getImageUrl = (filename: string, transforms = "") => {
 type Language = 'fr' | 'en' | 'ar';
 
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
+
+function MainApp() {
   const [lang, setLang] = useState<Language>('fr');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -43,43 +122,25 @@ export default function App() {
   const isRtl = lang === 'ar';
   
   // Admin State
+  const [user, setUser] = useState<User | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
+  const [isAuthReady, setIsAuthReady] = useState(false);
   
   // Gallery State
-  const [galleryImages, setGalleryImages] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tawfiq_gallery');
-    if (saved) return JSON.parse(saved);
-    return ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg', 'gallery-5.jpg', 'gallery-6.jpg'];
+  const [galleryImages, setGalleryImages] = useState<string[]>(['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg', 'gallery-5.jpg', 'gallery-6.jpg']);
+  const [whyImages, setWhyImages] = useState<string[]>(['action-1.jpg', 'action-2.jpg']);
+  const [disciplineImages, setDisciplineImages] = useState<Record<string, string>>({
+    muaythai: '',
+    k1: '',
+    kickboxing: '',
+    mma: '',
+    fullcontact: '',
+    fitness: '',
   });
-
-  // Why Images State
-  const [whyImages, setWhyImages] = useState<string[]>(() => {
-    const saved = localStorage.getItem('tawfiq_why');
-    if (saved) return JSON.parse(saved);
-    return ['action-1.jpg', 'action-2.jpg'];
-  });
-
-  // Discipline Images State
-  const [disciplineImages, setDisciplineImages] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('tawfiq_disciplines');
-    if (saved) return JSON.parse(saved);
-    return {
-      muaythai: '',
-      k1: '',
-      kickboxing: '',
-      mma: '',
-      fullcontact: '',
-      fitness: '',
-    };
-  });
-
-  // Story Video State
-  const [storyVideo, setStoryVideo] = useState<string>(() => {
-    return localStorage.getItem('tawfiq_story_video') || '';
-  });
+  const [storyVideo, setStoryVideo] = useState<string>('');
 
   // Cloudinary Config State (if not in env)
   const [cloudConfig, setCloudConfig] = useState({
@@ -87,12 +148,53 @@ export default function App() {
     preset: CLOUDINARY_UPLOAD_PRESET
   });
 
+  // Auth Listener
   useEffect(() => {
-    localStorage.setItem('tawfiq_gallery', JSON.stringify(galleryImages));
-    localStorage.setItem('tawfiq_why', JSON.stringify(whyImages));
-    localStorage.setItem('tawfiq_disciplines', JSON.stringify(disciplineImages));
-    localStorage.setItem('tawfiq_story_video', storyVideo);
-  }, [galleryImages, whyImages, disciplineImages, storyVideo]);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setIsAuthReady(true);
+      if (u && u.email === 'dragonballsam86@gmail.com') {
+        setIsAdminLoggedIn(true);
+      } else {
+        setIsAdminLoggedIn(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Firestore Listener
+  useEffect(() => {
+    if (!isAuthReady) return;
+
+    const configDoc = doc(db, 'settings', 'main');
+    const unsubscribe = onSnapshot(configDoc, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.galleryImages) setGalleryImages(data.galleryImages);
+        if (data.whyImages) setWhyImages(data.whyImages);
+        if (data.disciplineImages) setDisciplineImages(data.disciplineImages);
+        if (data.storyVideo) setStoryVideo(data.storyVideo);
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/main');
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady]);
+
+  // Test Connection
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'settings', 'main'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    }
+    testConnection();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -100,14 +202,47 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const saveToFirestore = async (newData: any) => {
+    if (!isAdminLoggedIn) return;
+    const configDoc = doc(db, 'settings', 'main');
+    try {
+      await setDoc(configDoc, {
+        ...newData,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'settings/main');
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginForm.username === 'sam' && loginForm.password === 'sam2006') {
-      setIsAdminLoggedIn(true);
-      setShowLoginModal(false);
-      setLoginError('');
+      // This is just for UI state, but for Firestore writes, we need Firebase Auth
+      // We'll prompt for Google Login if they use this
+      setLoginError('Please use "Sign in with Google" to enable admin editing.');
     } else {
       setLoginError('Invalid credentials');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      setShowLoginModal(false);
+    } catch (error) {
+      console.error("Login failed:", error);
+      setLoginError("Google login failed.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsAdminLoggedIn(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
   };
 
@@ -148,23 +283,19 @@ export default function App() {
         if (!error && result && result.event === "success") {
           const newUrl = result.info.secure_url;
           if (type === 'video') {
-            setStoryVideo(newUrl);
+            saveToFirestore({ storyVideo: newUrl });
           } else if (type === 'discipline' && typeof index === 'string') {
-            setDisciplineImages(prev => ({ ...prev, [index]: newUrl }));
+            saveToFirestore({ disciplineImages: { ...disciplineImages, [index]: newUrl } });
           } else if (type === 'why' && typeof index === 'number') {
-            setWhyImages(prev => {
-              const next = [...prev];
-              next[index] = newUrl;
-              return next;
-            });
+            const next = [...whyImages];
+            next[index] = newUrl;
+            saveToFirestore({ whyImages: next });
           } else if (index !== undefined && typeof index === 'number') {
-            setGalleryImages(prev => {
-              const next = [...prev];
-              next[index] = newUrl;
-              return next;
-            });
+            const next = [...galleryImages];
+            next[index] = newUrl;
+            saveToFirestore({ galleryImages: next });
           } else {
-            setGalleryImages(prev => [newUrl, ...prev]);
+            saveToFirestore({ galleryImages: [newUrl, ...galleryImages] });
           }
         }
       }
@@ -593,11 +724,9 @@ export default function App() {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setGalleryImages(prev => {
-                        const next = [...prev];
-                        next[i] = `gallery-${i + 1}.jpg`; // Reset to placeholder
-                        return next;
-                      });
+                      const next = [...galleryImages];
+                      next[i] = `gallery-${i + 1}.jpg`; // Reset to placeholder
+                      saveToFirestore({ galleryImages: next });
                     }}
                     className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
@@ -728,7 +857,7 @@ export default function App() {
                 Elite martial arts training and personal coaching for results-driven individuals.
               </p>
               <button 
-                onClick={() => isAdminLoggedIn ? setIsAdminLoggedIn(false) : setShowLoginModal(true)}
+                onClick={() => isAdminLoggedIn ? handleLogout() : setShowLoginModal(true)}
                 className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
               >
                 {isAdminLoggedIn ? 'Logout Admin' : 'Admin Access'}
@@ -855,8 +984,26 @@ export default function App() {
                   />
                 </div>
                 {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
-                <button className="w-full py-4 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-accent/80 transition-all">
+                <button className="w-full py-4 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-accent/80 transition-all shadow-lg shadow-brand-accent/20">
                   Login
+                </button>
+                
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-brand-dark px-2 text-white/40">Or continue with</span>
+                  </div>
+                </div>
+
+                <button 
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full py-4 bg-white text-brand-dark font-bold rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-3"
+                >
+                  <Globe size={20} />
+                  Sign in with Google
                 </button>
               </form>
             </motion.div>

@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "WebsiteConfig": {
+      "title": "Website Configuration",
+      "description": "Stores the dynamic content of the website like images and videos.",
+      "type": "object",
+      "properties": {
+        "galleryImages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of Cloudinary filenames or URLs for the gallery."
+        },
+        "whyImages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of Cloudinary filenames or URLs for the 'Why Train With Me' section."
+        },
+        "disciplineImages": {
+          "type": "object",
+          "description": "Map of discipline keys to Cloudinary filenames or URLs."
+        },
+        "storyVideo": {
+          "type": "string",
+          "description": "Cloudinary URL for the story video."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last time the config was updated."
+        }
+      },
+      "required": ["galleryImages", "whyImages", "disciplineImages", "storyVideo"]
+    }
+  },
+  "firestore": {
+    "settings/main": {
+      "schema": "WebsiteConfig",
+      "description": "The main configuration document for the website."
+    }
+  }
+}

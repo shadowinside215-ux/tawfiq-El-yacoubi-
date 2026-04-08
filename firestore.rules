@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: settings
+    // Document ID: main
+    // Fields:
+    //   - galleryImages: list (required) - Cloudinary filenames/URLs
+    //   - whyImages: list (required) - Cloudinary filenames/URLs
+    //   - disciplineImages: map (required) - Discipline keys to URLs
+    //   - storyVideo: string (required) - Cloudinary video URL
+    //   - updatedAt: timestamp (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email == "dragonballsam86@gmail.com" && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidConfig(data) {
+      return data.galleryImages is list &&
+             data.whyImages is list &&
+             data.disciplineImages is map &&
+             data.storyVideo is string &&
+             data.galleryImages.size() <= 100 &&
+             data.whyImages.size() <= 10 &&
+             data.storyVideo.size() < 1000;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /settings/main {
+      allow read: if true;
+      allow write: if isAdmin() && isValidConfig(request.resource.data);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
