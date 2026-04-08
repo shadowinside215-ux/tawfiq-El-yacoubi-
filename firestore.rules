@@ -31,13 +31,15 @@ service cloud.firestore {
     }
 
     function isValidConfig(data) {
-      return data.galleryImages is list &&
-             data.whyImages is list &&
-             data.disciplineImages is map &&
-             data.storyVideo is string &&
-             data.galleryImages.size() <= 100 &&
-             data.whyImages.size() <= 10 &&
-             data.storyVideo.size() < 1000;
+      // Use .get() with defaults to allow fields to be missing during initial creation/merge
+      return (data.get('galleryImages', []) is list) &&
+             (data.get('whyImages', []) is list) &&
+             (data.get('disciplineImages', {}) is map) &&
+             (data.get('storyVideo', '') is string) &&
+             // Size limits to prevent abuse
+             data.get('galleryImages', []).size() <= 100 &&
+             data.get('whyImages', []).size() <= 10 &&
+             data.get('storyVideo', '').size() < 1000;
     }
 
     // ===============================================================
