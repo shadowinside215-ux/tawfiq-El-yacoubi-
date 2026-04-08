@@ -18,26 +18,38 @@
   }
   body {
     @apply bg-brand-dark text-white font-sans antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold tracking-tight;
+    @apply font-display font-bold tracking-tighter;
   }
 }
 
-.glass {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10;
-}
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-hover {
+    @apply transition-all duration-500 hover:bg-brand-accent/10 hover:border-brand-accent/30 hover:shadow-[0_0_30px_rgba(0,170,255,0.2)];
+  }
 
-.glass-hover {
-  @apply transition-all duration-300 hover:bg-brand-accent/10 hover:border-brand-accent/30 hover:shadow-[0_0_20px_rgba(0,170,255,0.2)];
-}
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-accent to-brand-blue;
+  }
 
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-brand-accent;
+  .animate-slow-zoom {
+    animation: slow-zoom 30s ease-in-out infinite alternate;
+  }
+
+  @keyframes slow-zoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+  }
 }
 
 /* RTL Support */
 [dir="rtl"] {
-  font-family: 'Inter', sans-serif; /* Arabic fonts usually fallback well, but Inter is okay for UI */
+  font-family: 'Inter', sans-serif;
 }
 

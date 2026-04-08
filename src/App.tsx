@@ -320,7 +320,10 @@ function MainApp() {
   ];
 
   return (
-    <div className={`min-h-screen selection:bg-brand-accent selection:text-white`}>
+    <div className={`min-h-screen bg-brand-dark text-white font-sans selection:bg-brand-accent selection:text-white ${isRtl ? 'font-arabic' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Texture Overlay */}
+      <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+      
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-brand-dark/90 backdrop-blur-md py-4 shadow-xl' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -388,44 +391,80 @@ function MainApp() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/20 via-brand-dark/60 to-brand-dark"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/0 via-brand-dark/40 to-brand-dark z-10"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#1a3a5c_0%,transparent_70%)] opacity-40"></div>
+          <img 
+            src="https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070" 
+            alt="Martial Arts Background" 
+            className="w-full h-full object-cover opacity-20 animate-slow-zoom"
+            referrerPolicy="no-referrer"
+          />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+        <div className="relative z-20 max-w-7xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1, ease: "easeOut" }}
           >
-            <h1 className="text-5xl md:text-8xl font-display font-black mb-8 leading-tight">
-              TAWFIQ <span className="text-gradient">EL YACOUBI</span>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-xs font-bold uppercase tracking-[0.3em] mb-8"
+            >
+              <Zap size={14} />
+              {t.hero.badge}
+            </motion.div>
+            
+            <h1 className="text-6xl md:text-9xl font-display font-black mb-8 leading-[0.85] tracking-tighter">
+              TAWFIQ <br />
+              <span className="text-gradient">EL YACOUBI</span>
             </h1>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a 
+            
+            <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+              {t.hero.subtitle}
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <motion.a 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 href="#contact" 
-                className="group relative px-8 py-4 bg-brand-accent text-white font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95"
+                className="group relative px-10 py-5 bg-brand-accent text-white font-bold rounded-full overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(0,170,255,0.4)]"
               >
-                <span className="relative z-10">{t.hero.cta}</span>
+                <span className="relative z-10 flex items-center gap-2">
+                  {t.hero.cta}
+                  <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </span>
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-              </a>
-              <a 
+              </motion.a>
+              <motion.a 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 href="#about" 
-                className="px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 text-white font-bold rounded-full hover:bg-white/10 transition-all"
+                className="px-10 py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-bold rounded-full hover:bg-white/10 transition-all"
               >
                 {t.nav.about}
-              </a>
+              </motion.a>
             </div>
           </motion.div>
         </div>
 
         <motion.div 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/30"
+          animate={{ y: [0, 15, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20"
         >
-          <ChevronRight size={32} className="rotate-90" />
+          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-2">
+            <motion.div 
+              animate={{ height: [4, 8, 4] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="w-1 bg-white/40 rounded-full"
+            />
+          </div>
         </motion.div>
       </section>
 
@@ -644,15 +683,18 @@ function MainApp() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div 
-                className={`relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+            <div className="grid grid-cols-2 gap-4 md:gap-8">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className={`relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
                 onClick={() => isAdminLoggedIn && openUploadWidget(0, 'why')}
               >
                 <img 
                   src={getImageUrl(whyImages[0], 'w_600,c_fill,q_auto')} 
                   alt="Action 1" 
-                  className="w-full h-64 object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
                 {isAdminLoggedIn && (
@@ -660,15 +702,19 @@ function MainApp() {
                     <Zap size={32} className="text-white" />
                   </div>
                 )}
-              </div>
-              <div 
-                className={`relative cursor-pointer overflow-hidden rounded-2xl mt-8 border border-white/10 ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className={`relative cursor-pointer overflow-hidden rounded-2xl mt-8 md:mt-16 border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
                 onClick={() => isAdminLoggedIn && openUploadWidget(1, 'why')}
               >
                 <img 
                   src={getImageUrl(whyImages[1], 'w_600,c_fill,q_auto')} 
                   alt="Action 2" 
-                  className="w-full h-64 object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
                 {isAdminLoggedIn && (
@@ -676,7 +722,7 @@ function MainApp() {
                     <Zap size={32} className="text-white" />
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
