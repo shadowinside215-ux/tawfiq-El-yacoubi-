@@ -452,19 +452,6 @@ function MainApp() {
           </motion.div>
         </div>
 
-        <motion.div 
-          animate={{ y: [0, 15, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20"
-        >
-          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-2">
-            <motion.div 
-              animate={{ height: [4, 8, 4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1 bg-white/40 rounded-full"
-            />
-          </div>
-        </motion.div>
       </section>
 
       {/* About Section */}
