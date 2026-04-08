@@ -897,7 +897,7 @@ function MainApp() {
               </p>
               <button 
                 onClick={() => isAdminLoggedIn ? handleLogout() : setShowLoginModal(true)}
-                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
+                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest hidden"
               >
                 {isAdminLoggedIn ? 'Logout Admin' : 'Admin Access'}
               </button>
