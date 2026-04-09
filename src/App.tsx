@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { 
   Menu, 
   X, 
@@ -14,7 +14,7 @@ import {
   ChevronRight, 
   Globe,
   Award,
-  Zap,
+  Check,
   Shield,
   Star,
   Instagram,
@@ -120,6 +120,10 @@ function MainApp() {
   
   const t = translations[lang];
   const isRtl = lang === 'ar';
+
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 200]);
+  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
   
   // Admin State
   const [user, setUser] = useState<User | null>(null);
@@ -141,6 +145,7 @@ function MainApp() {
     fitness: '',
   });
   const [storyVideo, setStoryVideo] = useState<string>('');
+  const [heroImage, setHeroImage] = useState<string>('');
 
   // Cloudinary Config State (if not in env)
   const [cloudConfig, setCloudConfig] = useState({
@@ -174,6 +179,7 @@ function MainApp() {
         if (data.whyImages) setWhyImages(data.whyImages);
         if (data.disciplineImages) setDisciplineImages(data.disciplineImages);
         if (data.storyVideo) setStoryVideo(data.storyVideo);
+        if (data.heroImage) setHeroImage(data.heroImage);
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'settings/main');
@@ -246,7 +252,7 @@ function MainApp() {
     }
   };
 
-  const openUploadWidget = (index?: number | string, type: 'gallery' | 'why' | 'discipline' | 'video' = 'gallery') => {
+  const openUploadWidget = (index?: number | string, type: 'gallery' | 'why' | 'discipline' | 'video' | 'hero' = 'gallery') => {
     if (!cloudConfig.name || !cloudConfig.preset) {
       alert("Please configure Cloudinary Cloud Name and Upload Preset in the Admin Panel first.");
       return;
@@ -265,13 +271,13 @@ function MainApp() {
           palette: {
             window: "#0a0a0f",
             sourceBg: "#0d1b2a",
-            windowBorder: "#1a3a5c",
-            tabIcon: "#00aaff",
+            windowBorder: "#38bdf8",
+            tabIcon: "#38bdf8",
             inactiveTabIcon: "#ffffff",
-            menuIcons: "#00aaff",
-            link: "#00aaff",
-            action: "#00aaff",
-            inProgress: "#00aaff",
+            menuIcons: "#38bdf8",
+            link: "#38bdf8",
+            action: "#38bdf8",
+            inProgress: "#38bdf8",
             complete: "#25D366",
             error: "#ff0000",
             textDark: "#000000",
@@ -284,6 +290,8 @@ function MainApp() {
           const newUrl = result.info.secure_url;
           if (type === 'video') {
             saveToFirestore({ storyVideo: newUrl });
+          } else if (type === 'hero') {
+            saveToFirestore({ heroImage: newUrl });
           } else if (type === 'discipline' && typeof index === 'string') {
             saveToFirestore({ disciplineImages: { ...disciplineImages, [index]: newUrl } });
           } else if (type === 'why' && typeof index === 'number') {
@@ -315,7 +323,6 @@ function MainApp() {
     { href: '#disciplines', label: t.nav.disciplines },
     { href: '#achievements', label: t.nav.achievements },
     { href: '#gallery', label: t.nav.gallery },
-    { href: '#testimonials', label: t.nav.testimonials },
     { href: '#contact', label: t.nav.contact },
   ];
 
@@ -325,33 +332,45 @@ function MainApp() {
       <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
       
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-brand-dark/90 backdrop-blur-md py-4 shadow-xl' : 'bg-transparent py-6'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-brand-dark/95 border-b border-brand-accent/20 py-3 shadow-2xl shadow-brand-accent/5' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="w-10"></div> {/* Spacer where logo was */}
-
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map(link => (
-              <a key={link.href} href={link.href} className="text-sm font-medium hover:text-brand-accent transition-colors">
-                {link.label}
-              </a>
-            ))}
-            <div className="flex items-center gap-2 ml-4 border-l border-white/10 pl-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center p-1 bg-white/5 border border-white/10 rounded-none">
               {(['fr', 'en', 'ar'] as Language[]).map(l => (
                 <button 
                   key={l} 
                   onClick={() => toggleLang(l)}
-                  className={`text-xs px-2 py-1 rounded transition-all ${lang === l ? 'bg-brand-accent text-white' : 'hover:bg-white/10'}`}
+                  className={`relative text-[10px] font-black px-4 py-2 transition-all duration-500 ${lang === l ? 'text-brand-dark' : 'text-white/50 hover:text-white'}`}
                 >
-                  {l.toUpperCase()}
+                  {lang === l && (
+                    <motion.div 
+                      layoutId="lang-bg"
+                      className="absolute inset-0 bg-brand-accent z-0"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">{l.toUpperCase()}</span>
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Desktop Nav */}
+          <div className="hidden lg:flex items-center gap-10">
+            {navLinks.map(link => (
+              <a key={link.href} href={link.href} className="text-xs font-bold uppercase tracking-[0.2em] hover:text-brand-accent transition-all relative group">
+                {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-brand-accent transition-all group-hover:w-full"></span>
+              </a>
+            ))}
+          </div>
+
           {/* Mobile Menu Toggle */}
-          <button className="lg:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          <button 
+            className="lg:hidden w-12 h-12 flex items-center justify-center bg-brand-accent text-brand-dark rounded-none shadow-[4px_4px_0px_rgba(255,255,255,0.1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all" 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} strokeWidth={3} /> : <Menu size={24} strokeWidth={3} />}
           </button>
         </div>
       </nav>
@@ -360,27 +379,30 @@ function MainApp() {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, x: isRtl ? -100 : 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isRtl ? -100 : 100 }}
-            className="fixed inset-0 z-40 bg-brand-dark flex flex-col items-center justify-center gap-8 lg:hidden"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-40 bg-brand-dark/98 backdrop-blur-2xl flex flex-col items-center justify-center gap-10 lg:hidden"
           >
-            {navLinks.map(link => (
-              <a 
+            {navLinks.map((link, idx) => (
+              <motion.a 
                 key={link.href} 
                 href={link.href} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
                 onClick={() => setIsMenuOpen(false)}
-                className="text-2xl font-display font-bold hover:text-brand-accent"
+                className="text-4xl font-display font-black tracking-tighter hover:text-brand-accent transition-colors"
               >
                 {link.label}
-              </a>
+              </motion.a>
             ))}
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-2 mt-8">
               {(['fr', 'en', 'ar'] as Language[]).map(l => (
                 <button 
                   key={l} 
                   onClick={() => toggleLang(l)}
-                  className={`text-lg px-4 py-2 rounded ${lang === l ? 'bg-brand-accent text-white' : 'bg-white/5'}`}
+                  className={`text-sm font-black px-6 py-3 rounded-none border border-white/10 ${lang === l ? 'bg-brand-accent text-brand-dark border-brand-accent' : 'bg-white/5 text-white'}`}
                 >
                   {l.toUpperCase()}
                 </button>
@@ -392,47 +414,69 @@ function MainApp() {
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/0 via-brand-dark/40 to-brand-dark z-10"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#1a3a5c_0%,transparent_70%)] opacity-40"></div>
+        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/0 via-brand-dark/20 to-brand-dark z-10"></div>
           <img 
-            src="https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070" 
+            src={heroImage || "https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070"} 
             alt="Martial Arts Background" 
-            className="w-full h-full object-cover opacity-20 animate-slow-zoom"
+            className="w-full h-full object-cover opacity-60 animate-slow-zoom"
             referrerPolicy="no-referrer"
           />
-        </div>
+        </motion.div>
+        
+        {isAdminLoggedIn && (
+          <button 
+            onClick={() => openUploadWidget(undefined, 'hero')}
+            className="absolute bottom-10 right-10 z-30 bg-brand-accent/20 hover:bg-brand-accent/40 text-white p-4 rounded-none border border-white/20 backdrop-blur-md flex items-center gap-2 transition-all"
+          >
+            <Upload size={20} />
+            Change Hero Image
+          </button>
+        )}
 
         <div className="relative z-20 max-w-7xl mx-auto px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center px-4 py-2 text-brand-accent text-xs font-bold uppercase tracking-[0.3em] mb-8"
-            >
-              {t.hero.badge}
-            </motion.div>
-            
-            <h1 className="text-6xl md:text-9xl font-display font-black mb-8 leading-[0.85] tracking-tighter">
-              TAWFIQ <br />
-              <span className="text-gradient">EL YACOUBI</span>
+            <h1 className="text-4xl md:text-6xl font-display font-black mb-8 leading-[0.85] tracking-tighter overflow-hidden">
+              <motion.span 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="block"
+              >
+                TAWFIQ
+              </motion.span>
+              <motion.span 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="block text-gradient"
+              >
+                EL YACOUBI
+              </motion.span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light"
+            >
               {t.hero.subtitle}
-            </p>
+            </motion.p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <motion.a 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1, duration: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 href="#contact" 
-                className="group relative px-10 py-5 bg-brand-accent text-white font-bold rounded-full overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(0,170,255,0.4)]"
+                className="group relative px-10 py-5 bg-brand-accent text-brand-dark font-bold rounded-none overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(125,211,252,0.4)]"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   {t.hero.cta}
@@ -441,10 +485,13 @@ function MainApp() {
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               </motion.a>
               <motion.a 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1, duration: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 href="#about" 
-                className="px-10 py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-bold rounded-full hover:bg-white/10 transition-all"
+                className="px-10 py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-bold rounded-none hover:bg-white/10 transition-all"
               >
                 {t.nav.about}
               </motion.a>
@@ -470,7 +517,7 @@ function MainApp() {
             </p>
             <div className="grid grid-cols-2 gap-6 max-w-md mx-auto">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                <div className="w-12 h-12 rounded-none bg-brand-accent/10 flex items-center justify-center text-brand-accent">
                   <Trophy size={24} />
                 </div>
                 <div className="text-left">
@@ -479,7 +526,7 @@ function MainApp() {
                 </div>
               </div>
               <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                <div className="w-12 h-12 rounded-none bg-brand-accent/10 flex items-center justify-center text-brand-accent">
                   <Award size={24} />
                 </div>
                 <div className="text-left">
@@ -502,7 +549,7 @@ function MainApp() {
           
           <div className="max-w-4xl mx-auto">
             <div 
-              className={`relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-black/40 group ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
+              className={`relative aspect-video rounded-none overflow-hidden border border-white/10 bg-black/40 group ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
               onClick={() => isAdminLoggedIn && openUploadWidget(0, 'video')}
             >
               {storyVideo ? (
@@ -539,7 +586,7 @@ function MainApp() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { key: 'muaythai', icon: <Zap size={32} /> },
+              { key: 'muaythai', icon: <Trophy size={32} /> },
               { key: 'k1', icon: <Target size={32} /> },
               { key: 'kickboxing', icon: <Shield size={32} /> },
               { key: 'mma', icon: <TrendingUp size={32} /> },
@@ -552,10 +599,10 @@ function MainApp() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="glass glass-hover p-8 rounded-2xl group"
+                className="glass glass-hover p-8 rounded-none group"
               >
                 <div 
-                  className={`w-16 h-16 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent mb-6 group-hover:scale-110 transition-transform overflow-hidden relative ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
+                  className={`w-16 h-16 rounded-none bg-brand-accent/10 flex items-center justify-center text-brand-accent mb-6 group-hover:scale-110 transition-transform overflow-hidden relative ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
                   onClick={() => isAdminLoggedIn && openUploadWidget(item.key, 'discipline')}
                 >
                   {disciplineImages[item.key] ? (
@@ -611,7 +658,7 @@ function MainApp() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className="flex gap-6 items-start glass p-6 rounded-xl border-l-4 border-l-brand-gold"
+                  className="flex gap-6 items-start glass p-6 rounded-none border-l-4 border-l-brand-gold"
                 >
                   <div className={`mt-1 ${item.color}`}>
                     <Trophy size={28} />
@@ -662,7 +709,7 @@ function MainApp() {
                     className="flex items-center gap-4"
                   >
                     <div className="w-8 h-8 rounded-full bg-brand-accent flex items-center justify-center text-white shrink-0">
-                      <Star size={16} fill="currentColor" />
+                      <Check size={16} />
                     </div>
                     <p className="text-xl font-medium">{(t.why as any)[`point${i}`]}</p>
                   </motion.div>
@@ -674,7 +721,7 @@ function MainApp() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className={`relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+                className={`relative cursor-pointer overflow-hidden rounded-none border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
                 onClick={() => isAdminLoggedIn && openUploadWidget(0, 'why')}
               >
                 <img 
@@ -685,7 +732,7 @@ function MainApp() {
                 />
                 {isAdminLoggedIn && (
                   <div className="absolute inset-0 bg-brand-accent/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Zap size={32} className="text-white" />
+                    <Upload size={32} className="text-white" />
                   </div>
                 )}
               </motion.div>
@@ -694,7 +741,7 @@ function MainApp() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
-                className={`relative cursor-pointer overflow-hidden rounded-2xl mt-8 md:mt-16 border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
+                className={`relative cursor-pointer overflow-hidden rounded-none mt-8 md:mt-16 border border-white/10 aspect-[3/4] ${isAdminLoggedIn ? 'hover:border-brand-accent transition-colors' : ''}`}
                 onClick={() => isAdminLoggedIn && openUploadWidget(1, 'why')}
               >
                 <img 
@@ -705,7 +752,7 @@ function MainApp() {
                 />
                 {isAdminLoggedIn && (
                   <div className="absolute inset-0 bg-brand-accent/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Zap size={32} className="text-white" />
+                    <Upload size={32} className="text-white" />
                   </div>
                 )}
               </motion.div>
@@ -727,7 +774,7 @@ function MainApp() {
               <motion.div
                 key={i}
                 whileHover={{ scale: 1.02 }}
-                className="relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-white/10 group"
+                className="relative aspect-square cursor-pointer overflow-hidden rounded-none border border-white/10 group"
                 onClick={() => {
                   if (isAdminLoggedIn) {
                     openUploadWidget(i);
@@ -738,7 +785,7 @@ function MainApp() {
               >
                 {img.includes('gallery-') ? (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-white/20">
-                    <Zap size={32} className="mb-2" />
+                    <Upload size={32} className="mb-2" />
                     <span className="text-[10px] uppercase tracking-widest">Empty Slot</span>
                   </div>
                 ) : (
@@ -750,7 +797,7 @@ function MainApp() {
                   />
                 )}
                 <div className="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Zap size={32} className="text-white" />
+                  <Upload size={32} className="text-white" />
                 </div>
                 {isAdminLoggedIn && !img.includes('gallery-') && (
                   <button 
@@ -759,21 +806,21 @@ function MainApp() {
                       const next = [...galleryImages];
                       next[i] = `gallery-${i + 1}.jpg`; // Reset to placeholder
                       saveToFirestore({ galleryImages: next });
-                    }}
-                    className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={16} />
-                  </button>
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-none opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={16} />
+                </button>
                 )}
               </motion.div>
             ))}
             {isAdminLoggedIn && (
               <motion.div
                 whileHover={{ scale: 1.02 }}
-                className="relative aspect-square cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-white/10 hover:border-brand-accent/50 flex flex-col items-center justify-center group bg-white/5"
+                className="relative aspect-square cursor-pointer overflow-hidden rounded-none border-2 border-dashed border-white/10 hover:border-brand-accent/50 flex flex-col items-center justify-center group bg-white/5"
                 onClick={() => openUploadWidget()}
               >
-                <Zap size={32} className="text-brand-accent mb-2 group-hover:scale-110 transition-transform" />
+                <Upload size={32} className="text-brand-accent mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-bold text-white/40 group-hover:text-white uppercase tracking-widest">Add New Slot</span>
               </motion.div>
             )}
@@ -797,55 +844,22 @@ function MainApp() {
             <img 
               src={selectedImage} 
               alt="Full view" 
-              className="max-w-full max-h-full rounded-lg shadow-2xl"
+              className="max-w-full max-h-full rounded-none shadow-2xl"
               referrerPolicy="no-referrer"
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-brand-navy/20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-display font-black mb-4">{t.testimonials.title}</h2>
-            <div className="w-24 h-1 bg-brand-accent mx-auto rounded-full"></div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[1, 2, 3].map(i => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="glass p-8 rounded-2xl relative"
-              >
-                <div className="absolute -top-4 left-8 text-brand-accent">
-                  <MessageCircle size={40} fill="currentColor" className="opacity-20" />
-                </div>
-                <p className="text-white/70 italic mb-6">"{(t.testimonials as any)[`t${i}`].text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-brand-accent/20 flex items-center justify-center font-bold text-brand-accent">
-                    {(t.testimonials as any)[`t${i}`].name[0]}
-                  </div>
-                  <p className="font-bold">{(t.testimonials as any)[`t${i}`].name}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Contact Section */}
       <section id="contact" className="py-24 bg-brand-dark">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-display font-black mb-12">{t.contact.title}</h2>
           
-          <div className="glass p-12 rounded-3xl max-w-2xl mx-auto">
+          <div className="glass p-12 rounded-none max-w-2xl mx-auto border-l-4 border-brand-accent">
             <div className="space-y-12 mb-12">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                <div className="w-16 h-16 rounded-none bg-brand-accent/10 flex items-center justify-center text-brand-accent">
                   <Phone size={32} />
                 </div>
                 <div>
@@ -854,12 +868,13 @@ function MainApp() {
                 </div>
               </div>
               <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                <div className="w-16 h-16 rounded-none bg-brand-accent/10 flex items-center justify-center text-brand-accent">
                   <Mail size={32} />
                 </div>
                 <div>
                   <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{t.contact.email}</p>
-                  <p className="text-3xl font-bold">elyacoubitawfik@gmail.com</p>
+                  <p className="text-xl md:text-3xl font-bold break-all">elyacoubitawfik@gmail.com</p>
+                  <p className="text-brand-accent text-sm mt-2 font-medium italic">{t.contact.ready}</p>
                 </div>
               </div>
             </div>
@@ -868,7 +883,7 @@ function MainApp() {
               href="https://wa.me/212665738593" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-4 px-12 py-6 bg-[#25D366] text-white text-xl font-bold rounded-full hover:scale-105 transition-all shadow-2xl shadow-[#25D366]/20"
+              className="inline-flex items-center gap-4 px-12 py-6 bg-[#25D366] text-white text-xl font-bold rounded-none hover:scale-102 transition-all shadow-2xl shadow-[#25D366]/20"
             >
               <svg 
                 viewBox="0 0 24 24" 
@@ -889,15 +904,12 @@ function MainApp() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
             <div className="text-center md:text-left">
-              <h2 className="text-2xl font-display font-black tracking-tighter mb-2">
-                TAWFIQ <span className="text-brand-accent">EL YACOUBI</span>
-              </h2>
               <p className="text-white/40 text-sm max-w-xs">
                 Elite martial arts training and personal coaching for results-driven individuals.
               </p>
               <button 
                 onClick={() => isAdminLoggedIn ? handleLogout() : setShowLoginModal(true)}
-                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest hidden"
+                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
               >
                 {isAdminLoggedIn ? 'Logout Admin' : 'Admin Access'}
               </button>
@@ -967,7 +979,7 @@ function MainApp() {
               onClick={openUploadWidget}
               className="flex items-center gap-2 px-4 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-brand-accent/80 transition-all"
             >
-              <Zap size={16} /> Add Pictures
+              <Upload size={16} /> Add Pictures
             </button>
             
             <button 

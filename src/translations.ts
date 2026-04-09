@@ -5,7 +5,6 @@ export const translations = {
       disciplines: "Disciplines",
       achievements: "Palmarès",
       gallery: "Galerie",
-      testimonials: "Témoignages",
       contact: "Contact",
     },
     hero: {
@@ -57,21 +56,6 @@ export const translations = {
     gallery: {
       title: "Galerie",
     },
-    testimonials: {
-      title: "Témoignages",
-      t1: {
-        name: "Karim B.",
-        text: "L'expertise de Tawfiq est inégalée. Il m'a aidé à transformer mon physique et ma discipline mentale en seulement quelques mois.",
-      },
-      t2: {
-        name: "Sarah L.",
-        text: "En tant que débutante, j'avais peur de commencer le Muay Thai. Tawfiq est patient, pédagogue et extrêmement motivant.",
-      },
-      t3: {
-        name: "Omar D.",
-        text: "Le meilleur coach de la ville. Ses entraînements sont intenses mais les résultats sont là. Un vrai professionnel.",
-      },
-    },
     contact: {
       title: "Contact & Réservation",
       name: "Nom",
@@ -82,6 +66,7 @@ export const translations = {
       send: "Envoyer le Message",
       whatsapp: "Contactez-moi sur WhatsApp",
       select_discipline: "Choisir une discipline",
+      ready: "Prêt à devenir plus fort ?",
     },
     footer: {
       rights: "Tous droits réservés.",
@@ -93,7 +78,6 @@ export const translations = {
       disciplines: "Disciplines",
       achievements: "Achievements",
       gallery: "Gallery",
-      testimonials: "Testimonials",
       contact: "Contact",
     },
     hero: {
@@ -145,21 +129,6 @@ export const translations = {
     gallery: {
       title: "Gallery",
     },
-    testimonials: {
-      title: "Testimonials",
-      t1: {
-        name: "Karim B.",
-        text: "Tawfiq's expertise is unmatched. He helped me transform my physique and mental discipline in just a few months.",
-      },
-      t2: {
-        name: "Sarah L.",
-        text: "As a beginner, I was afraid to start Muay Thai. Tawfiq is patient, pedagogical, and extremely motivating.",
-      },
-      t3: {
-        name: "Omar D.",
-        text: "The best coach in town. His workouts are intense but the results are there. A true professional.",
-      },
-    },
     contact: {
       title: "Contact & Booking",
       name: "Name",
@@ -170,6 +139,7 @@ export const translations = {
       send: "Send Message",
       whatsapp: "Contact me on WhatsApp",
       select_discipline: "Select a discipline",
+      ready: "Ready to become stronger?",
     },
     footer: {
       rights: "All rights reserved.",
@@ -181,7 +151,6 @@ export const translations = {
       disciplines: "التخصصات",
       achievements: "الإنجازات",
       gallery: "المعرض",
-      testimonials: "آراء المتدربين",
       contact: "اتصل بنا",
     },
     hero: {
@@ -233,21 +202,6 @@ export const translations = {
     gallery: {
       title: "المعرض",
     },
-    testimonials: {
-      title: "آراء المتدربين",
-      t1: {
-        name: "كريم ب.",
-        text: "خبرة توفيق لا مثيل لها. ساعدني في تحويل جسدي وانضباطي العقلي في غضون أشهر قليلة.",
-      },
-      t2: {
-        name: "سارة ل.",
-        text: "كمبتدئة، كنت أخشى البدء في المواي تاي. توفيق صبور، تربوي ومحفز للغاية.",
-      },
-      t3: {
-        name: "عمر د.",
-        text: "أفضل مدرب في المدينة. تدريباته مكثفة ولكن النتائج موجودة. محترف حقيقي.",
-      },
-    },
     contact: {
       title: "الاتصال والحجز",
       name: "الاسم",
@@ -258,6 +212,7 @@ export const translations = {
       send: "إرسال الرسالة",
       whatsapp: "تواصل معي عبر واتساب",
       select_discipline: "اختر تخصصاً",
+      ready: "هل أنت مستعد لتصبح أقوى؟",
     },
     footer: {
       rights: "جميع الحقوق محفوظة.",
