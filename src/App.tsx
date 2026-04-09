@@ -146,6 +146,7 @@ function MainApp() {
   });
   const [storyVideo, setStoryVideo] = useState<string>('');
   const [heroImage, setHeroImage] = useState<string>('');
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   // Cloudinary Config State (if not in env)
   const [cloudConfig, setCloudConfig] = useState({
@@ -180,6 +181,9 @@ function MainApp() {
         if (data.disciplineImages) setDisciplineImages(data.disciplineImages);
         if (data.storyVideo) setStoryVideo(data.storyVideo);
         if (data.heroImage) setHeroImage(data.heroImage);
+        setIsInitialDataLoaded(true);
+      } else {
+        setIsInitialDataLoaded(true);
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'settings/main');
@@ -416,12 +420,14 @@ function MainApp() {
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
         <motion.div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/0 via-brand-dark/20 to-brand-dark z-10"></div>
-          <img 
-            src={heroImage || "https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070"} 
-            alt="Martial Arts Background" 
-            className="w-full h-full object-cover opacity-60"
-            referrerPolicy="no-referrer"
-          />
+          {isInitialDataLoaded && (
+            <img 
+              src={heroImage || "https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070"} 
+              alt="Martial Arts Background" 
+              className="w-full h-full object-cover opacity-60"
+              referrerPolicy="no-referrer"
+            />
+          )}
         </motion.div>
         
         {isAdminLoggedIn && (
@@ -910,12 +916,15 @@ function MainApp() {
               <p className="text-white/40 text-sm max-w-xs">
                 Elite martial arts training and personal coaching for results-driven individuals.
               </p>
-              <button 
-                onClick={() => isAdminLoggedIn ? handleLogout() : setShowLoginModal(true)}
-                className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
-              >
-                {isAdminLoggedIn ? 'Logout Admin' : 'Admin Access'}
-              </button>
+              {/* Admin Access Hidden as per user request */}
+              {isAdminLoggedIn && (
+                <button 
+                  onClick={handleLogout}
+                  className="mt-4 text-[10px] text-white/20 hover:text-brand-accent transition-colors uppercase tracking-widest"
+                >
+                  Logout Admin
+                </button>
+              )}
             </div>
             <div className="flex gap-6">
               <a 
