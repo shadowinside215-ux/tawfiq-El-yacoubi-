@@ -414,12 +414,12 @@ function MainApp() {
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="absolute inset-0 z-0">
+        <motion.div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/0 via-brand-dark/20 to-brand-dark z-10"></div>
           <img 
             src={heroImage || "https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=2070"} 
             alt="Martial Arts Background" 
-            className="w-full h-full object-cover opacity-60 animate-slow-zoom"
+            className="w-full h-full object-cover opacity-60"
             referrerPolicy="no-referrer"
           />
         </motion.div>
@@ -434,41 +434,44 @@ function MainApp() {
           </button>
         )}
 
-        <div className="relative z-20 max-w-7xl mx-auto px-6 text-center">
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-6 lg:gap-12 text-center lg:text-left mt-12 lg:mt-0"
           >
-            <h1 className="text-4xl md:text-6xl font-display font-black mb-8 leading-[0.85] tracking-tighter overflow-hidden">
-              <motion.span 
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="block"
+            <div className="max-w-2xl">
+              <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black mb-4 md:mb-8 leading-[0.85] tracking-tighter overflow-hidden">
+                <motion.span 
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className="block"
+                >
+                  TAWFIQ
+                </motion.span>
+                <motion.span 
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  className="block text-gradient"
+                >
+                  EL YACOUBI
+                </motion.span>
+              </h1>
+              
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 1 }}
+                className="text-lg md:text-xl text-white/60 leading-relaxed font-light"
               >
-                TAWFIQ
-              </motion.span>
-              <motion.span 
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="block text-gradient"
-              >
-                EL YACOUBI
-              </motion.span>
-            </h1>
-            
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light"
-            >
-              {t.hero.subtitle}
-            </motion.p>
+                {t.hero.subtitle}
+              </motion.p>
+            </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
               <motion.a 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -476,7 +479,7 @@ function MainApp() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 href="#contact" 
-                className="group relative px-10 py-5 bg-brand-accent text-brand-dark font-bold rounded-none overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(125,211,252,0.4)]"
+                className="group relative px-6 py-3 sm:px-10 sm:py-5 bg-brand-accent text-brand-dark font-bold rounded-none overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(125,211,252,0.4)] text-sm sm:text-base"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   {t.hero.cta}
@@ -491,7 +494,7 @@ function MainApp() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 href="#about" 
-                className="px-10 py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-bold rounded-none hover:bg-white/10 transition-all"
+                className="px-6 py-3 sm:px-10 sm:py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white font-bold rounded-none hover:bg-white/10 transition-all text-sm sm:text-base"
               >
                 {t.nav.about}
               </motion.a>
