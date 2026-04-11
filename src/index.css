@@ -5,10 +5,12 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Exo 2", "Rajdhani", sans-serif;
   
-  --color-brand-dark: #0a0a0f;
-  --color-brand-navy: #0d1b2a;
-  --color-brand-blue: #38bdf8;
-  --color-brand-accent: #7dd3fc;
+  --color-brand-dark: #001a0d;
+  --color-brand-green-dark: #002b16;
+  --color-brand-red: #c1272d;
+  --color-brand-green: #006233;
+  --color-brand-accent: #c1272d;
+  --color-brand-secondary: #006233;
   --color-brand-gold: #ffd700;
 }
 
@@ -49,7 +51,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-accent to-brand-blue;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-brand-accent to-brand-secondary;
   }
 
   .animate-slow-zoom {

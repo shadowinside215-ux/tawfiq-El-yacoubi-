@@ -275,13 +275,13 @@ function MainApp() {
           palette: {
             window: "#0a0a0f",
             sourceBg: "#0d1b2a",
-            windowBorder: "#38bdf8",
-            tabIcon: "#38bdf8",
+            windowBorder: "#c1272d",
+            tabIcon: "#c1272d",
             inactiveTabIcon: "#ffffff",
-            menuIcons: "#38bdf8",
-            link: "#38bdf8",
-            action: "#38bdf8",
-            inProgress: "#38bdf8",
+            menuIcons: "#c1272d",
+            link: "#c1272d",
+            action: "#c1272d",
+            inProgress: "#c1272d",
             complete: "#25D366",
             error: "#ff0000",
             textDark: "#000000",
@@ -485,7 +485,7 @@ function MainApp() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 href="#contact" 
-                className="group relative px-6 py-3 sm:px-10 sm:py-5 bg-brand-accent text-brand-dark font-bold rounded-none overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(125,211,252,0.4)] text-sm sm:text-base"
+                className="group relative px-6 py-3 sm:px-10 sm:py-5 bg-brand-accent text-brand-dark font-bold rounded-none overflow-hidden transition-all hover:shadow-[0_0_40px_rgba(193,39,45,0.4)] text-sm sm:text-base"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   {t.hero.cta}
@@ -549,7 +549,7 @@ function MainApp() {
       </section>
 
       {/* My Story Section */}
-      <section id="story" className="py-24 bg-brand-navy/30">
+      <section id="story" className="py-24 bg-brand-green-dark/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-display font-black mb-4">{t.story.title}</h2>
@@ -558,7 +558,7 @@ function MainApp() {
           
           <div className="max-w-4xl mx-auto">
             <div 
-              className={`relative aspect-video rounded-none overflow-hidden border border-white/10 bg-black/40 group ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
+              className={`relative aspect-video rounded-none overflow-hidden border border-white/10 bg-brand-dark/40 group ${isAdminLoggedIn ? 'cursor-pointer' : ''}`}
               onClick={() => isAdminLoggedIn && openUploadWidget(0, 'video')}
             >
               {storyVideo ? (
@@ -644,7 +644,7 @@ function MainApp() {
       <section id="achievements" className="py-24 bg-brand-dark relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-accent blur-[120px] rounded-full"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-blue blur-[120px] rounded-full"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-secondary blur-[120px] rounded-full"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -656,10 +656,10 @@ function MainApp() {
           <div className="grid lg:grid-cols-2 gap-12">
             <div className="space-y-6">
               {[
-                { key: 'world', color: 'text-brand-gold' },
-                { key: 'africa', color: 'text-brand-accent' },
-                { key: 'arab', color: 'text-brand-accent' },
-                { key: 'morocco_muaythai', color: 'text-white/80' },
+                { key: 'world', color: 'text-brand-gold', borderColor: 'border-l-brand-gold' },
+                { key: 'africa', color: 'text-brand-secondary', borderColor: 'border-l-brand-secondary' },
+                { key: 'arab', color: 'text-brand-secondary', borderColor: 'border-l-brand-secondary' },
+                { key: 'morocco_muaythai', color: 'text-white/80', borderColor: 'border-l-white/20' },
               ].map((item, idx) => (
                 <motion.div 
                   key={item.key}
@@ -667,7 +667,7 @@ function MainApp() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className="flex gap-6 items-start glass p-6 rounded-none border-l-4 border-l-brand-gold"
+                  className={`flex gap-6 items-start glass p-6 rounded-none border-l-4 ${item.borderColor}`}
                 >
                   <div className={`mt-1 ${item.color}`}>
                     <Trophy size={28} />
@@ -678,10 +678,10 @@ function MainApp() {
             </div>
             <div className="space-y-6">
               {[
-                { key: 'morocco_kick', color: 'text-white/80' },
-                { key: 'morocco_full', color: 'text-white/80' },
-                { key: 'mma_reg', color: 'text-white/80' },
-                { key: 'blackbelt', color: 'text-brand-accent' },
+                { key: 'morocco_kick', color: 'text-white/80', borderColor: 'border-l-white/20' },
+                { key: 'morocco_full', color: 'text-white/80', borderColor: 'border-l-white/20' },
+                { key: 'mma_reg', color: 'text-white/80', borderColor: 'border-l-white/20' },
+                { key: 'blackbelt', color: 'text-brand-secondary', borderColor: 'border-l-brand-secondary' },
               ].map((item, idx) => (
                 <motion.div 
                   key={item.key}
@@ -689,7 +689,7 @@ function MainApp() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className="flex gap-6 items-start glass p-6 rounded-xl border-l-4 border-l-brand-accent"
+                  className={`flex gap-6 items-start glass p-6 rounded-xl border-l-4 ${item.borderColor}`}
                 >
                   <div className={`mt-1 ${item.color}`}>
                     <Award size={28} />
@@ -703,7 +703,7 @@ function MainApp() {
       </section>
 
       {/* Why Train With Me */}
-      <section className="py-24 bg-brand-navy">
+      <section className="py-24 bg-brand-green-dark">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -805,9 +805,6 @@ function MainApp() {
                     referrerPolicy="no-referrer"
                   />
                 )}
-                <div className="absolute inset-0 bg-brand-accent/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Upload size={32} className="text-white" />
-                </div>
                 {isAdminLoggedIn && !img.includes('gallery-') && (
                   <button 
                     onClick={(e) => {
@@ -844,7 +841,7 @@ function MainApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-brand-dark/95 flex items-center justify-center p-4"
             onClick={() => setSelectedImage(null)}
           >
             <button className="absolute top-6 right-6 text-white hover:text-brand-accent">
