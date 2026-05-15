@@ -63,27 +63,17 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   render() {
     if (this.state.hasError) {
-      let message = "Something went wrong.";
-      try {
-        const errInfo = JSON.parse(this.state.error?.message || "{}");
-        if (errInfo.error) {
-          message = `Firestore Error: ${errInfo.error} (${errInfo.operationType} on ${errInfo.path})`;
-        }
-      } catch (e) {
-        message = this.state.error?.message || message;
-      }
-
       return (
         <div className="min-h-screen bg-brand-dark flex items-center justify-center p-6 text-center">
           <div className="glass p-8 rounded-3xl max-w-md">
             <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-4">Oops!</h2>
-            <p className="text-white/60 mb-6">{message}</p>
+            <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+            <p className="text-white/60 mb-6">We encountered an unexpected error. Please try refreshing the page.</p>
             <button 
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-brand-accent text-white rounded-full font-bold"
             >
-              Reload Page
+              Refresh Page
             </button>
           </div>
         </div>
